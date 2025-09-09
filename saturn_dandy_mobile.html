@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<title>Secret Saturn Sigils — SATURN DANDY / ARENA (mobile)</title>
+<style>
+  :root { --bg:#0b0f14; --panel:#101820; --ink:#e8f0ff; --muted:#a8b3c7; --accent:#66d9ef; --good:#9ae6b4; --bad:#f6ad55; --danger:#f56565; --grid:#1a2430;
+          --btn:#121a22; --btnb:#2b3a4a; --btnh:#3a4e64; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; background:linear-gradient(180deg,#0b0f14,#0a0d12 60%,#07090c); color:var(--ink);
+         -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; overscroll-behavior:contain; }
+  header { padding:12px 12px; display:flex; gap:10px; align-items:center; justify-content:space-between; border-bottom:1px solid #16202b; position:sticky; top:0; background:#0b0f14e6; backdrop-filter:saturate(1.2) blur(6px); z-index:5; }
+  h1 { margin:0; font-size: clamp(16px, 2.5vw, 22px); letter-spacing:0.5px; }
+  #container { display:grid; grid-template-columns: 320px 1fr; gap:12px; padding:12px; padding-bottom:120px; /* space for controls */ }
+  #left { background:var(--panel); border:1px solid #1f2a37; border-radius:12px; padding:12px; display:flex; flex-direction:column; gap:10px; min-height:0; }
+  #right { background:var(--panel); border:1px solid #1f2a37; border-radius:12px; padding:12px; min-height:0; }
+  .btn { appearance:none; border:1px solid var(--btnb); background:var(--btn); color:var(--ink); padding:10px 12px; border-radius:12px; cursor:pointer; transition:.2s; width:100%; text-align:left; }
+  .btn:hover { transform: translateY(-1px); border-color:var(--btnh); }
+  .btn:active { transform: translateY(0); }
+  .pill { display:inline-flex; align-items:center; gap:6px; font-size:12px; padding:4px 8px; border-radius:999px; border:1px solid #294055; color:#b9d8ff; }
+  .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .gridwrap { display:grid; grid-template-columns: 1fr; gap:10px; }
+  canvas { width:100%; height:auto; aspect-ratio: 3 / 2; image-rendering: pixelated; background: #05080c; border-radius:10px; border:1px solid #1f2a37; touch-action:none; }
+  details { border:1px solid #223447; border-radius:10px; padding:8px 10px; }
+  summary { cursor:pointer; color:#c6d4e3; }
+  .stat { display:flex; justify-content:space-between; font-variant-numeric: tabular-nums; }
+  .bar { width:100%; height:8px; background:#0e1720; border-radius:6px; overflow:hidden; border:1px solid #223447; }
+  .bar > i { display:block; height:100%; background:linear-gradient(90deg,#66d9ef,#7bf0d9); }
+  code.kbd { background:#0c141c; border:1px solid #213244; padding:2px 6px; border-radius:6px; }
+  .mode { font-weight:700; color:#8bd5ff; }
+  .hint { color:var(--muted); font-size:12px; }
+  .titlecard { display:grid; place-items:center; height:60vh; gap:12px; padding:16px; }
+  .titlecard h2 { font-size: clamp(22px, 8vw, 56px); margin:0; letter-spacing:1.5px; text-align:center; }
+  .titlecard p { color:var(--muted); margin:0; text-align:center; }
+  .choice { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+  .choice .btn { width:auto; text-align:center; font-size:16px; padding:12px 16px; }
+  .log { background:#0a1118; border:1px solid #1f2a37; border-radius:10px; padding:8px; max-height:180px; overflow:auto; font-size:12px; line-height:1.3; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .muted { color:#94a3b8; }
+  footer { padding:10px 16px; color:#64748b; border-top:1px solid #16202b; }
+
+  /* Touch controls */
+  #touchControls { position:fixed; left:0; right:0; bottom:0; padding:8px 10px calc(10px + env(safe-area-inset-bottom)); background:linear-gradient(180deg, #0b0f14cc, #0b0f1499); backdrop-filter: blur(8px); border-top:1px solid #16202b; z-index:10; }
+  .tc-wrap { display:flex; gap:10px; align-items:stretch; justify-content:space-between; }
+  .pad { flex:1; display:grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 56px); gap:8px; max-width: 320px; }
+  .pad .spacer { visibility:hidden; }
+  .tbtn { border:1px solid var(--btnb); background:var(--btn); color:var(--ink); border-radius:14px; font-weight:700; font-size:16px; display:flex; align-items:center; justify-content:center; padding:10px; touch-action:none; }
+  .tbtn:active { transform: translateY(1px); }
+  .actions { flex:2; display:grid; grid-template-columns: repeat(4, minmax(56px,1fr)); grid-auto-rows: 56px; gap:8px; }
+  .actions .wide { grid-column: span 2; }
+  .actions .full { grid-column: 1 / -1; }
+  .hide-on-arena { display:block; }
+  .arena-only { display:none; }
+  .kbd { font-variant-numeric: tabular-nums; }
+  @media (max-width: 960px) {
+    #container { grid-template-columns: 1fr; }
+    #left { order:2; }
+    #right { order:1; }
+  }
+  @media (max-width: 480px) {
+    .pad { grid-template-rows: repeat(2, 52px); }
+    .tbtn, .actions { font-size:14px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Secret Saturn Sigils — <span class="mode" id="modeLabel">TITLE</span></h1>
+  <div class="row">
+    <span class="pill">ATDice → <b id="sacLabel">—</b> sac</span>
+    <span class="pill">Slot = 6 sac</span>
+    <button class="btn" id="btnReset" title="Return to Title">Return to Title</button>
+  </div>
+</header>
+
+<div id="title" class="titlecard">
+  <h2>SATURN DANDY</h2>
+  <p>Choose a simulation mode</p>
+  <div class="choice">
+    <button class="btn" id="startDandy">🎭 SATURN DANDY — Roguelike</button>
+    <button class="btn" id="startArena">⚔️ ARENA — Cellular Automata Skirmish</button>
+  </div>
+  <p class="hint">Touchscreen: Use the on-screen D‑pad and buttons. Keyboard still works: <code class="kbd">Arrows/WASD</code> • <code class="kbd">Space</code> • <code class="kbd">1–6</code> • <code class="kbd">T</code></p>
+</div>
+
+<div id="container" style="display:none;">
+  <div id="left">
+    <div>
+      <div class="stat"><span>Vital Presence (VP)</span><span id="vpVal" class="mono">—</span></div>
+      <div class="bar"><i id="vpBar" style="width:0%"></i></div>
+    </div>
+    <div>
+      <div class="stat"><span>Anomaly Power (AP)</span><span id="apVal" class="mono">—</span></div>
+      <div class="bar"><i id="apBar" style="width:0%"></i></div>
+    </div>
+    <div>
+      <div class="stat"><span>Sac Pool</span><span id="sacPoolVal" class="mono">—</span></div>
+      <div class="bar"><i id="sacPoolBar" style="width:0%"></i></div>
+    </div>
+
+    <div id="abilityList"></div>
+
+    <details open>
+      <summary>Controls</summary>
+      <div class="gridwrap">
+        <div class="hint">Touch: D‑pad for movement; buttons for abilities.</div>
+        <div class="hint">Keyboard: Move Arrows / WASD • Wait Space • End Turn T • Abilities 1–6</div>
+      </div>
+    </details>
+
+    <details open>
+      <summary>Log</summary>
+      <div id="log" class="log mono"></div>
+    </details>
+  </div>
+
+  <div id="right">
+    <canvas id="view" width="960" height="640"></canvas>
+  </div>
+</div>
+
+<!-- Touch Controls -->
+<div id="touchControls" style="display:none;">
+  <div class="tc-wrap">
+    <!-- D-pad -->
+    <div class="pad" id="dpad">
+      <div class="spacer"></div>
+      <button class="tbtn" data-key="arrowup">▲</button>
+      <div class="spacer"></div>
+      <button class="tbtn" data-key="arrowleft">◀</button>
+      <button class="tbtn" data-key=" " title="Wait">⏸</button>
+      <button class="tbtn" data-key="arrowright">▶</button>
+      <div class="spacer"></div>
+      <button class="tbtn" data-key="arrowdown">▼</button>
+      <div class="spacer"></div>
+    </div>
+    <!-- Actions -->
+    <div class="actions" id="actionGrid">
+      <!-- DANDY action set -->
+      <button class="tbtn hide-on-arena" data-key="1" title="[1] Temporal Serenade">1  🎶</button>
+      <button class="tbtn hide-on-arena" data-key="2" title="[2] Witty Rejoinder">2  🛡️</button>
+      <button class="tbtn hide-on-arena" data-key="3" title="[3] Chrono‑Step">3  ⏩</button>
+      <button class="tbtn hide-on-arena" data-key="4" title="[4] Companion’s Valor">4  🐕</button>
+      <button class="tbtn hide-on-arena" data-key="5" title="[5] Time Closet">5  🧥</button>
+      <button class="tbtn hide-on-arena" data-key="6" title="[6] Encore">6  🔁</button>
+      <button class="tbtn wide hide-on-arena" data-key="t" title="End Turn">End Turn ⏭</button>
+
+      <!-- ARENA action set -->
+      <button class="tbtn arena-only" id="arenaPause" title="Pause/Play">⏯ Pause</button>
+      <button class="tbtn arena-only" id="arenaSwap1" title="Titan vs Daemon">⚡ TvsD</button>
+      <button class="tbtn arena-only" id="arenaSwap2" title="Cephalid vs Nihilith">🕸️ CvsN</button>
+      <button class="tbtn wide arena-only" id="rerollSlot" title="Reroll ATDice">Reroll ATDice 🎲</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Mobile‑friendly single-file demo of the Sac Engine timeline & cellular automata concepts for Secret Saturn Sigils.
+</footer>
+
+<script>
+/* ======= Utility ======= */
+const RNG = (seed => () => (seed = (seed*1664525 + 1013904223) >>> 0) / 4294967296)(Date.now()>>>0);
+const clamp = (v,min,max)=>Math.max(min,Math.min(max,v));
+const pick = arr => arr[Math.floor(RNG()*arr.length)];
+const lerp = (a,b,t)=>a+(b-a)*t;
+function rollDice(n){ let s=0, rolls=[]; for(let i=0;i<n;i++){ const r=1+Math.floor(RNG()*6); s+=r; rolls.push(r); } return {sum:s, rolls}; }
+function log(msg){ const el=document.getElementById('log'); const p=document.createElement('div'); p.innerHTML=msg; el.prepend(p); }
+
+/* ======= Core Rules (Sac Engine) ======= */
+const CORE = { SLOT: 6, basicCost: { sac:6, ap:1 }, rollATDice: ()=> rollDice(2) };
+
+/* ======= Rendering ======= */
+const canvas = document.getElementById('view');
+const ctx = canvas.getContext('2d');
+
+const COLORS = { bg:'#05080c', wall:'#1a2430', floor:'#0b1220', player:'#8bd5ff', d06:'#b5ffb8', foe:'#f6ad55', text:'#dbeafe', grid:'#0f1722',
+                 titan:'#8b5cf6', daemon:'#f97316', cephalid:'#22d3ee', nihilith:'#94a3b8', strike:'#f87171', trail:'#fde68a' };
+
+/* ======= Game State ======= */
+let MODE = 'TITLE'; // 'DANDY' or 'ARENA'
+let keys = new Set();
+window.addEventListener('keydown',e=>{ keys.add(e.key.toLowerCase()); e.preventDefault(); }, {passive:false});
+window.addEventListener('keyup',e=>{ keys.delete(e.key.toLowerCase()); e.preventDefault(); }, {passive:false});
+
+/* ======= Title + UI ======= */
+function setModeLabel(s){ document.getElementById('modeLabel').textContent = s; }
+function setSacLabel(v){ document.getElementById('sacLabel').textContent = v; }
+function showTitle(){ MODE='TITLE'; document.getElementById('title').style.display='grid'; document.getElementById('container').style.display='none'; document.getElementById('touchControls').style.display='none'; setModeLabel('TITLE'); }
+function showGame(){ document.getElementById('title').style.display='none'; document.getElementById('container').style.display='grid'; document.getElementById('touchControls').style.display='block'; }
+
+document.getElementById('btnReset').onclick = showTitle;
+document.getElementById('startDandy').onclick = ()=>startDandy();
+document.getElementById('startArena').onclick = ()=>startArena();
+
+/* ======= Touch helpers ======= */
+function simulateKeyPress(k){
+  k = k.toLowerCase();
+  keys.add(k);
+  // brief press
+  setTimeout(()=>{ keys.delete(k); }, 60);
+}
+function bindTouchButtons(){
+  // D-pad + wait
+  document.querySelectorAll('#dpad .tbtn').forEach(btn=>{
+    const key = btn.getAttribute('data-key');
+    const fire = (e)=>{ e.preventDefault(); simulateKeyPress(key); };
+    btn.addEventListener('touchstart', fire, {passive:false});
+    btn.addEventListener('mousedown', fire);
+  });
+  // Generic action keys
+  document.querySelectorAll('#actionGrid .tbtn[data-key]').forEach(btn=>{
+    const key = btn.getAttribute('data-key');
+    const fire = (e)=>{ e.preventDefault(); simulateKeyPress(key); };
+    btn.addEventListener('touchstart', fire, {passive:false});
+    btn.addEventListener('mousedown', fire);
+  });
+}
+
+/* ======= SATURN DANDY (Roguelike) ======= */
+function startDandy(){
+  MODE='DANDY'; setModeLabel('SATURN DANDY — Roguelike'); showGame();
+  document.querySelectorAll('.hide-on-arena').forEach(e=>e.style.display='block');
+  document.querySelectorAll('.arena-only').forEach(e=>e.style.display='none');
+  DANDY.init();
+}
+
+const DANDY = (()=>{
+  const W=48, H=32;
+  let map=[], player, d06, foes=[], roundSac=0, sacPool=0, ap=6, vp=10, closetUsed=false, cancelNext=false;
+  function genMap(){
+    map = new Array(W*H).fill(0);
+    for(let y=0;y<H;y++) for(let x=0;x<W;x++){
+      const i=y*W+x; const edge=(x===0||y===0||x===W-1||y===H-1);
+      map[i] = edge || RNG()<0.08 ? 1 : 0;
+    }
+  }
+  function isWall(x,y){ return x<0||y<0||x>=W||y>=H||map[y*W+x]===1; }
+  function rndEmpty(){ let x,y; do{ x=2+Math.floor(RNG()*(W-4)); y=2+Math.floor(RNG()*(H-4)); }while(isWall(x,y)); return {x,y}; }
+  function addFoes(n){ foes=[]; for(let i=0;i<n;i++){ const p=rndEmpty(); foes.push({x:p.x,y:p.y,hp:3}); } }
+  function rollRound(){ const {sum, rolls} = CORE.rollATDice(); roundSac=sum; sacPool=sum; setSacLabel(rolls.join('+')+' = '+sum); updateMeters(); }
+  function updateMeters(){
+    const vpEl=document.getElementById('vpVal'), apEl=document.getElementById('apVal'), sacEl=document.getElementById('sacPoolVal');
+    vpEl.textContent = `${vp}/10`; document.getElementById('vpBar').style.width = (vp/10*100)+'%';
+    apEl.textContent = `${ap}/10`; document.getElementById('apBar').style.width = (ap/10*100)+'%';
+    sacEl.textContent = `${sacPool}/${roundSac}`; document.getElementById('sacPoolBar').style.width = (sacPool/Math.max(1,roundSac)*100)+'%';
+  }
+  function init(){
+    genMap(); const p=rndEmpty(); player={x:p.x,y:p.y, buffSac:0};
+    const q=rndEmpty(); d06={x:q.x,y:q.y, orbit:0, guard:false};
+    addFoes(12); closetUsed=false; cancelNext=false; ap=6; vp=10;
+    buildAbilityUI();
+    log('🎭 You are the <b>Saturn Dandy</b>. D06 whirs nearby.');
+    rollRound(); draw();
+  }
+  function buildAbilityUI(){
+    const root = document.getElementById('abilityList'); root.innerHTML='';
+    const mk = (hotkey, name, costSac, costAp, desc, fn) => {
+      const btn=document.createElement('button'); btn.className='btn'; btn.innerHTML=`<b>[${hotkey}] ${name}</b><br><span class="muted">${desc}</span>`;
+      btn.title = `Costs ${costSac} sac / ${costAp} AP`; btn.onclick = ()=>useAbility(hotkey);
+      root.append(btn); abilities[hotkey]={ name,costSac,costAp,desc,fn };
+    };
+    abilities = {};
+    mk('1','Temporal Serenade',12,2,'Play a riff; gain +3 sac this round.', ()=>{ player.buffSac+=3; log('🎶 Temporal Serenade grants +3 sac.'); });
+    mk('2','Witty Rejoinder',6,1,'Cancel the next enemy hit on you.', ()=>{ cancelNext=true; log('💬 Witty Rejoinder readied.'); });
+    mk('3','Chrono-Step',6,1,'Step one slot on the timeline (+6 sac).', ()=>{ sacPool+=6; log('⏩ Chrono-Step: +6 sac.'); });
+    mk('4','Companion’s Valor',6,1,'D06 interposes, blocking next foe.', ()=>{ d06.guard=true; log('🐕 D06 circles defensively.'); });
+    mk('5','Time Closet',0,0,'Once/scene: random prop.', ()=>{
+      if(closetUsed){ log('🧥 The Closet is empty—for now.'); return; }
+      closetUsed=true;
+      const evt = pick(['heal','bomb','sac','ap']);
+      if(evt==='heal'){ vp = clamp(vp+2,0,10); log('🧪 Closet yields tonics: +2 VP.'); }
+      if(evt==='bomb'){ const f=foes[Math.floor(RNG()*foes.length)]; if(f){ f.hp=0; log('💣 Closet tosses a paradox bomb! (one foe gone)'); } }
+      if(evt==='sac'){ sacPool+=6; log('⏱️ Extra time slips out: +6 sac.'); }
+      if(evt==='ap'){ ap = clamp(ap+2,0,10); log('⚡ Spare batteries: +2 AP.'); }
+      updateMeters();
+    });
+    mk('6','Encore!',24,4,'Repeat last ability instantly.', ()=>{ if(!lastUsed){ log('No last action to Encore.'); return; } lastUsed.fn(); log('🔁 Encore!'); });
+  }
+  let abilities={}, lastUsed=null;
+  function useAbility(k){
+    const a = abilities[k]; if(!a) return;
+    if(sacPool < a.costSac){ log('⛔ Not enough sac.'); return; }
+    if(ap < a.costAp){ log('⛔ Not enough AP.'); return; }
+    sacPool -= a.costSac; ap -= a.costAp; a.fn(); lastUsed = a; updateMeters(); draw();
+  }
+  function tryMove(dx,dy){
+    if(sacPool < CORE.basicCost.sac || ap < CORE.basicCost.ap){ log('⛔ Need sac/AP to move. End turn (T) to reroll.'); return; }
+    const nx=player.x+dx, ny=player.y+dy;
+    if(isWall(nx,ny)) { log('⛰️ You bump a wall.'); return; }
+    const foe = foes.find(f=>f.x===nx&&f.y===ny);
+    if(foe){
+      foe.hp -= 1; sacPool -= CORE.basicCost.sac; ap -= CORE.basicCost.ap;
+      log(`🗡️ You strike a foe (hp now ${Math.max(0,foe.hp)}).`);
+      updateMeters(); draw(); return;
+    }
+    player.x=nx; player.y=ny; sacPool -= CORE.basicCost.sac; ap -= CORE.basicCost.ap;
+    log('👞 Step.'); updateMeters(); draw();
+  }
+  function endTurn(){
+    // D06 automata
+    d06.orbit = (d06.orbit+1)%4; const offsets=[[1,0],[0,1],[-1,0],[0,-1]];
+    d06.x = clamp(player.x + offsets[d06.orbit][0], 1, W-2);
+    d06.y = clamp(player.y + offsets[d06.orbit][1], 1, H-2);
+    // Enemy AI
+    foes.forEach(f=>{
+      if(f.hp<=0) return;
+      const dx = Math.sign(player.x - f.x), dy = Math.sign(player.y - f.y);
+      const nx=f.x+dx, ny=f.y+dy;
+      if(nx===d06.x && ny===d06.y && d06.guard){ log('🐕 D06 blocks an approach.'); d06.guard=false; return; }
+      if(nx===player.x && ny===player.y){
+        // attack
+        if(cancelNext){ log('🛡️ Your quip disarms the attack.'); cancelNext=false; return; }
+        vp = clamp(vp-1,0,10); log('💥 A foe hits you (-1 VP).');
+      } else if(!isWall(nx,ny) && !foes.some(o=>o!==f && o.x===nx&&o.y===ny)){ f.x=nx; f.y=ny; }
+    });
+    foes = foes.filter(f=>f.hp>0);
+    ap = clamp(ap+1,0,10); // recharge
+    sacPool = 0;
+    if(player.buffSac>0){ sacPool += player.buffSac; player.buffSac=0; }
+    rollRound(); draw();
+    if(vp<=0){ log('☠️ You have fallen. Tap "Return to Title"'); }
+  }
+  function handleInput(){
+    if(MODE!=='DANDY') return;
+    if(keys.has('t')){ keys.delete('t'); endTurn(); return; }
+    if(keys.has(' ')){ keys.delete(' '); sacPool -= Math.min(sacPool, CORE.basicCost.sac); updateMeters(); draw(); return; }
+    const mapKey = {'arrowup':[0,-1],'w':[0,-1],'arrowdown':[0,1],'s':[0,1],'arrowleft':[-1,0],'a':[-1,0],'arrowright':[1,0],'d':[1,0]};
+    for(const k in mapKey){ if(keys.has(k)){ keys.delete(k); const [dx,dy]=mapKey[k]; tryMove(dx,dy); return; } }
+    for(let i=1;i<=6;i++){ const k=String(i); if(keys.has(k)){ keys.delete(k); useAbility(k); return; } }
+  }
+  function draw(){
+    ctx.fillStyle = COLORS.bg; ctx.fillRect(0,0,canvas.width,canvas.height);
+    const Wc=48, Hc=32; const sx = Math.floor(canvas.width/(Wc)), sy = Math.floor(canvas.height/(Hc));
+    for(let y=0;y<H;y++) for(let x=0;x<W;x++){
+      const px=x*sx, py=y*sy;
+      ctx.fillStyle = map[y*W+x]===1 ? COLORS.wall : COLORS.floor;
+      ctx.fillRect(px,py,sx-1,sy-1);
+    }
+    for(const f of foes){ ctx.fillStyle = COLORS.foe; ctx.fillRect(f.x*sx+2,f.y*sy+2,sx-4,sy-4); }
+    ctx.fillStyle = COLORS.d06; ctx.fillRect(d06.x*sx+3,d06.y*sy+3,sx-6,sy-6);
+    ctx.fillStyle = COLORS.player; ctx.fillRect(player.x*sx+2,player.y*sy+2,sx-4,sy-4);
+    // HUD overlay timeline
+    ctx.fillStyle = '#ffffff15';
+    const used = roundSac - sacPool;
+    for(let s=0; s<=roundSac; s+=CORE.SLOT){
+      const x = Math.min(canvas.width, (s/Math.max(1,roundSac))*canvas.width);
+      ctx.fillRect(x, canvas.height-14, 1, 12);
+    }
+    ctx.fillStyle = '#66d9ef55';
+    ctx.fillRect(0, canvas.height-8, canvas.width*(used/Math.max(1,roundSac)), 6);
+  }
+  function loop(){ handleInput(); if(MODE==='DANDY') requestAnimationFrame(loop); }
+  return { init, loop };
+})();
+
+/* ======= ARENA (Cellular Automata Skirmish) ======= */
+function startArena(){
+  MODE='ARENA'; setModeLabel('ARENA — Cellular Automata Combat'); showGame();
+  document.querySelectorAll('.hide-on-arena').forEach(e=>e.style.display='none');
+  document.querySelectorAll('.arena-only').forEach(e=>e.style.display='block');
+  ARENA.init();
+}
+const ARENA = (()=>{
+  const W=64,H=40;
+  let grid, tick=0, matchup='titan-daemon', paused=false, sacInSlot=0, slot=CORE.SLOT;
+  function init(){
+    grid = new Array(W*H).fill(0);
+    setup(matchup);
+    buildUI();
+    rollSlot();
+    loop();
+  }
+  function buildUI(){
+    document.getElementById('abilityList').innerHTML = `
+      <button class="btn" onclick="ARENA.swap('titan-daemon')">⚡ Titan vs Daemon</button>
+      <button class="btn" onclick="ARENA.swap('cephalid-nihilith')">🕸️ Cephalid vs Nihilith</button>
+      <div class="hint">Tap ⏯ to pause/resume • Reroll to refresh pacing</div>
+    `;
+    // Hook arena touch buttons
+    document.getElementById('arenaPause').onclick = ()=>{ paused=!paused; };
+    document.getElementById('arenaSwap1').onclick = ()=>swap('titan-daemon');
+    document.getElementById('arenaSwap2').onclick = ()=>swap('cephalid-nihilith');
+    document.getElementById('rerollSlot').onclick = ()=>rollSlot();
+  }
+  function rollSlot(){ const {sum, rolls} = CORE.rollATDice(); sacInSlot = sum; setSacLabel(rolls.join('+') + ' = ' + sum); slot = CORE.SLOT; }
+  function swap(m){ matchup=m; init(); }
+  function idx(x,y){ return y*W+x; }
+  function setup(kind){
+    // 0 empty, 1 Titan, 2 Daemon, 3 Cephalid, 4 Nihilith, 5 Stomp marker, 6 Scorch, 7 Net
+    grid.fill(0);
+    if(kind==='titan-daemon'){
+      for(let x=8;x<16;x++) grid[idx(x,H/2|0)]=1;
+      for(let x=W-16;x<W-8;x++) grid[idx(x,H/2|0)]=2;
+    } else {
+      for(let y=12;y<28;y++) grid[idx(10,y)]=3;
+      for(let y=12;y<28;y++) grid[idx(W-11,y)]=4;
+    }
+  }
+  function neighbors(x,y,val){
+    let c=0; for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){
+      if(dx||dy){ const nx=x+dx, ny=y+dy; if(nx>=0&&ny>=0&&nx<W&&ny<H){ if(grid[idx(nx,ny)]===val) c++; } }
+    } return c;
+  }
+  function step(){
+    if(paused) return;
+    const next = grid.slice();
+    for(let y=0;y<H;y++) for(let x=0;x<W;x++){
+      const i=idx(x,y); const v=grid[i];
+      if(matchup==='titan-daemon'){
+        if(v===1){ // Titan: advance, charge stomp near slot boundary
+          if(tick%slot===slot-1 && RNG()<0.6){ next[idx(Math.min(x+1,W-1),y)] = 5; }
+          else if(RNG()<0.2 && x+1<W && grid[idx(x+1,y)]===0){ next[idx(x+1,y)]=1; next[i]=0; }
+        } else if(v===2){ // Daemon: rush forward, leave trail
+          if(x>0 && grid[idx(x-1,y)]===0){ next[idx(x-1,y)]=2; next[i]=6; }
+        } else if(v===5){ // Stomp resolves: clears daemon & trails in AoE
+          for(let dy=-2;dy<=2;dy++) for(let dx=-2;dx<=2;dx++){
+            const nx=x+dx, ny=y+dy; if(nx>=0&&ny>=0&&nx<W&&ny<H){
+              const j=idx(nx,ny); if(grid[j]===2||grid[j]===6){ next[j]=0; }
+            }
+          } next[i]=0;
+        } else if(v===6){ if(RNG()<0.35) next[i]=0; }
+      } else {
+        if(v===3){ // Cephalid: tendrils + net tokens
+          if(RNG()<0.25){
+            const dirs=[[1,0],[-1,0],[0,1],[0,-1]]; const d=pick(dirs); const nx=x+d[0], ny=y+d[1];
+            if(nx>=0&&ny>=0&&nx<W&&ny<H && grid[idx(nx,ny)]===0) next[idx(nx,ny)]=3;
+          }
+          if(RNG()<0.05) next[i]=7;
+        } else if(v===4){ // Nihilith: devour unless tangled by net
+          const tangled = neighbors(x,y,7)>0;
+          if(!tangled){
+            const dirs=[[-1,0],[1,0],[0,-1],[0,1]]; const d=pick(dirs);
+            const nx=x+d[0], ny=y+d[1];
+            if(nx>=0&&ny>=0&&nx<W&&ny<H){
+              const j=idx(nx,ny);
+              if(grid[j]===0){ next[j]=4; next[i]=0; }
+              if(grid[j]===3||grid[j]===7){ next[j]=0; }
+            }
+          }
+        } else if(v===7){ if(RNG()<0.08) next[i]=0; }
+      }
+    }
+    grid = next; tick++;
+  }
+  function draw(){
+    ctx.fillStyle = COLORS.bg; ctx.fillRect(0,0,canvas.width,canvas.height);
+    const sx = Math.floor(canvas.width/W), sy=Math.floor(canvas.height/H);
+    for(let y=0;y<H;y++) for(let x=0;x<W;x++){
+      const v = grid[idx(x,y)]; if(!v) continue;
+      let c = COLORS.grid;
+      if(v===1) c = COLORS.titan;
+      if(v===2) c = COLORS.daemon;
+      if(v===3) c = COLORS.cephalid;
+      if(v===4) c = COLORS.nihilith;
+      if(v===5) c = COLORS.strike;
+      if(v===6) c = COLORS.trail;
+      if(v===7) c = '#38bdf855';
+      ctx.fillStyle = c; ctx.fillRect(x*sx, y*sy, sx, sy);
+    }
+    ctx.fillStyle = COLORS.text; ctx.font='12px monospace';
+    const legend = matchup==='titan-daemon' ? 'Titan (purple) vs Daemon (orange) — Stomp clears trails' : 'Cephalid (cyan) vs Nihilith (grey) — Temporal Net tangles Devour';
+    ctx.fillText(legend, 8, 16);
+  }
+  function loop(){ if(MODE!=='ARENA') return; step(); draw(); requestAnimationFrame(loop); }
+  return { init, loop, swap };
+})();
+
+/* ======= Main Loop & Touch Init ======= */
+function mainLoop(){ if(MODE==='DANDY'){ DANDY.loop(); } else if(MODE==='ARENA'){ ARENA.loop(); } requestAnimationFrame(mainLoop); }
+showTitle();
+bindTouchButtons();
+mainLoop();
+
+// Prevent iOS Safari double-tap zoom on buttons
+document.addEventListener('gesturestart', e=> e.preventDefault(), {passive:false});
+</script>
+</body>
+</html>
