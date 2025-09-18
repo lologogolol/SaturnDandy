@@ -1,2 +1,2 @@
 # SaturnDandy
-Html game about rhe Saturn Dandy
+various game systems for saturn dandy
